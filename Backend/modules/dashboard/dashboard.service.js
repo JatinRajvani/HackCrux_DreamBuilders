@@ -33,9 +33,10 @@ const normalizeCallType = (value) => {
   return allowed.includes(normalized) ? normalized : "other";
 };
 
-export const getAllCalls = async (companyId) => {
+export const getAllCalls = async (companyId, employeeId = null) => {
   try {
-    const calls = await CallModel.findAll({ companyId, status: "analyzed" });
+    const query = employeeId ? { companyId, employeeId, status: "analyzed" } : { companyId, status: "analyzed" };
+    const calls = await CallModel.findAll(query);
     
     // Map to include only relevant fields for dashboard list
     return calls.map((call) => ({
@@ -65,9 +66,10 @@ export const getAllCalls = async (companyId) => {
   }
 };
 
-export const getCallDetails = async (callId, companyId) => {
+export const getCallDetails = async (callId, companyId, employeeId = null) => {
   try {
-    const calls = await CallModel.findAll({ callId, companyId });
+    const query = employeeId ? { callId, companyId, employeeId } : { callId, companyId };
+    const calls = await CallModel.findAll(query);
     return calls[0] || null;
   } catch (error) {
     console.error("Error fetching call details:", error);
@@ -75,10 +77,13 @@ export const getCallDetails = async (callId, companyId) => {
   }
 };
 
-export const getAnalytics = async (companyId) => {
+export const getAnalytics = async (companyId, employeeId = null) => {
   try {
-    const allCalls = await CallModel.findAll({ companyId });
-    const analyzedCalls = await CallModel.findAll({ companyId, status: "analyzed" });
+    const allQuery = employeeId ? { companyId, employeeId } : { companyId };
+    const analyzedQuery = { ...allQuery, status: "analyzed" };
+    
+    const allCalls = await CallModel.findAll(allQuery);
+    const analyzedCalls = await CallModel.findAll(analyzedQuery);
 
     const totalCalls = analyzedCalls.length;
     const positiveCalls = analyzedCalls.filter(
@@ -160,9 +165,9 @@ export const getAnalytics = async (companyId) => {
   }
 };
 
-export const filterCalls = async (companyId, product_name, sentiment, call_type) => {
+export const filterCalls = async (companyId, product_name, sentiment, call_type, employeeId = null) => {
   try {
-    const query = { companyId, status: "analyzed" };
+    const query = employeeId ? { companyId, employeeId, status: "analyzed" } : { companyId, status: "analyzed" };
     const allCalls = await CallModel.findAll(query);
 
     let filtered = allCalls;
@@ -207,9 +212,9 @@ export const filterCalls = async (companyId, product_name, sentiment, call_type)
   }
 };
 
-export const getCallsByProduct = async (companyId, product_name) => {
+export const getCallsByProduct = async (companyId, product_name, employeeId = null) => {
   try {
-    const query = { companyId, status: "analyzed" };
+    const query = employeeId ? { companyId, employeeId, status: "analyzed" } : { companyId, status: "analyzed" };
     const calls = await CallModel.findAll(query);
     
     return calls
@@ -233,9 +238,10 @@ export const getCallsByProduct = async (companyId, product_name) => {
   }
 };
 
-export const getCompetitorAnalysis = async (companyId) => {
+export const getCompetitorAnalysis = async (companyId, employeeId = null) => {
   try {
-    const calls = await CallModel.findAll({ companyId, status: "analyzed" });
+    const query = employeeId ? { companyId, employeeId, status: "analyzed" } : { companyId, status: "analyzed" };
+    const calls = await CallModel.findAll(query);
     
     const competitorMap = {};
     const advantageMap = {};
@@ -268,9 +274,10 @@ export const getCompetitorAnalysis = async (companyId) => {
   }
 };
 
-export const getRiskRadar = async (companyId) => {
+export const getRiskRadar = async (companyId, employeeId = null) => {
   try {
-    const calls = await CallModel.findAll({ companyId, status: "analyzed" });
+    const query = employeeId ? { companyId, employeeId, status: "analyzed" } : { companyId, status: "analyzed" };
+    const calls = await CallModel.findAll(query);
 
     return calls
       .filter((call) => {
@@ -333,8 +340,9 @@ export const updateCallMetadata = async (callId, metadata = {}) => {
   return updated[0] || null;
 };
 
-export const buildCallReport = async (callId, companyId) => {
-  const calls = await CallModel.findAll({ callId, companyId });
+export const buildCallReport = async (callId, companyId, employeeId = null) => {
+  const query = employeeId ? { callId, companyId, employeeId } : { callId, companyId };
+  const calls = await CallModel.findAll(query);
   const call = calls[0] || null;
   if (!call) throw new Error("Call not found");
 

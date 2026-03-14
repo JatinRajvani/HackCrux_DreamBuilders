@@ -28,7 +28,7 @@ export const uploadAudio = async (req, res) => {
       callId,
       employeeId: req.user?.userId?.toString() || null,
       companyId: req.user?.companyId || null,
-      productId: req.body.productId || null,
+      productId: (req.body.productId && req.body.productId.trim() !== "") ? req.body.productId : null,
       fileName: file.filename,
       filePath: file.path,
       transcript: null,
@@ -77,7 +77,7 @@ export const uploadText = async (req, res) => {
       callId,
       employeeId: req.user?.userId?.toString() || null,
       companyId: req.user?.companyId || null,
-      productId: productId || null,
+      productId: (productId && productId.trim() !== "") ? productId : null,
       fileName: fileName || `Text_Input_${new Date().toISOString().substring(0, 10)}.txt`,
       filePath: null, // No physical file path
       transcript: text, // Start already transcribed
