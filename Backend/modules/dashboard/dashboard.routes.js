@@ -7,6 +7,7 @@ import {
   filterCallsHandler,
   getProductAnalysis,
   getCompetitorInsights,
+  getRiskRadarHandler,
   downloadCallReportHandler,
   updateCallMetadataHandler,
 } from "./dashboard.controller.js";
@@ -33,6 +34,9 @@ router.get("/product", authMiddleware, getProductAnalysis);
 
 // GET - Get competitor intelligence
 router.get("/competitors", authMiddleware, getCompetitorInsights);
+
+// GET - Get at-risk deals for Risk Radar
+router.get("/risk-radar", authMiddleware, getRiskRadarHandler);
 
 // GET - Download a full analysis report as HTML
 router.get("/report/:callId", authMiddleware, downloadCallReportHandler);

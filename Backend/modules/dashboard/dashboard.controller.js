@@ -5,6 +5,7 @@ import {
   filterCalls,
   getCallsByProduct,
   getCompetitorAnalysis,
+  getRiskRadar,
   buildCallReport,
   updateCallMetadata,
 } from "./dashboard.service.js";
@@ -156,6 +157,24 @@ export const downloadCallReportHandler = async (req, res) => {
     const statusCode = error.message === "Call not found" ? 404 : 500;
 
     res.status(statusCode).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+export const getRiskRadarHandler = async (req, res) => {
+  try {
+    const riskCalls = await getRiskRadar();
+
+    res.status(200).json({
+      success: true,
+      totalAtRisk: riskCalls.length,
+      riskCalls,
+    });
+  } catch (error) {
+    console.error("Error generating risk radar:", error);
+    res.status(500).json({
       success: false,
       error: error.message,
     });

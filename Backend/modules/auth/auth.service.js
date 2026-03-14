@@ -4,6 +4,7 @@
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import UserModel from "./user.model.js";
+import CompanyModel from "../company/company.model.js";
 import "dotenv/config.js";
 
 class AuthService {
@@ -17,25 +18,39 @@ class AuthService {
     // Hash password
     const hashedPassword = await bcryptjs.hash(password, 10);
 
-    // Create user
+    // Create Company first (Phase 1 modification)
+    const companyResult = await CompanyModel.create({
+      companyName: company_name,
+      adminUserId: null, // Will update after user is created
+    });
+    
+    const companyId = companyResult.insertedId;
+
+    // Create user attached to this company as Admin
     const userData = {
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
-      company_name,
-      role: "user",
+      companyId: companyId,
+      companyName: company_name,
+      role: "admin", // The creator is the admin
       status: "active",
     };
 
     const result = await UserModel.create(userData);
+    const userId = result.insertedId;
+
+    // Update the company to link the admin user
+    await CompanyModel.updateOne(companyId, { adminUserId: userId, adminName: name });
 
     // Generate JWT token
     const token = jwt.sign(
       {
-        userId: result.insertedId,
+        userId: userId,
+        companyId: companyId,
         email: email.toLowerCase(),
         name,
-        role: "user",
+        role: "admin",
       },
       process.env.JWT_SECRET || "your-secret-key",
       { expiresIn: "24h" }
@@ -44,13 +59,14 @@ class AuthService {
     return {
       token,
       user: {
-        userId: result.insertedId,
+        userId: userId,
+        companyId: companyId,
         email,
         name,
-        company_name,
-        role: "user",
+        company_name, // Keeping for backward compatibility temporarily
+        role: "admin",
       },
-      message: "User registered successfully",
+      message: "Company and Admin registered successfully",
     };
   }
 
@@ -71,6 +87,7 @@ class AuthService {
     const token = jwt.sign(
       {
         userId: user._id,
+        companyId: user.companyId,
         email: user.email,
         name: user.name,
         role: user.role,
@@ -83,9 +100,11 @@ class AuthService {
       token,
       user: {
         userId: user._id,
+        companyId: user.companyId,
         email: user.email,
         name: user.name,
         role: user.role,
+        company_name: user.company_name // fallback
       },
       message: "Login successful",
     };

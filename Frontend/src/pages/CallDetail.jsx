@@ -5,14 +5,17 @@ import {
   AlertTriangle,
   ArrowLeft,
   BarChart3,
+  BookOpen,
   Calendar,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Clock,
   Copy,
   DollarSign,
   Download,
   Frown,
+  GraduationCap,
   HelpCircle,
   Lightbulb,
   Mail,
@@ -23,6 +26,7 @@ import {
   Shield,
   Smile,
   Star,
+  Swords,
   Target,
   ThumbsUp,
   TrendingUp,
@@ -155,6 +159,7 @@ function CallDetail({ token }) {
   const [editMode, setEditMode] = useState(false);
   const [call, setCall] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('actions');
   const [metaForm, setMetaForm] = useState({
     callTitle: '',
     callType: 'other',
@@ -236,6 +241,13 @@ function CallDetail({ token }) {
     salespersonPerformance = {},
     conversationAnalysis = {},
     keyMoments = [],
+    actionCenter = [],
+    objectionPlaybook = [],
+    riskLevel = 'medium',
+    riskSummary = '',
+    dealRecoveryPlan = {},
+    competitiveBattleCard = {},
+    coachingActions = {},
   } = insights;
 
   const sentimentConfig = sentimentMap[sentiment] || sentimentMap.neutral;
@@ -350,7 +362,27 @@ function CallDetail({ token }) {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      {/* ── TABS NAVIGATION ── */}
+      <div className="mb-2 mt-4 flex overflow-x-auto rounded-xl border border-white/10 bg-[#161829] p-1.5 md:w-fit">
+        {[
+          { id: 'actions', label: 'Overview & Actions', icon: Target },
+          { id: 'analysis', label: 'Deep Analysis', icon: BarChart3 },
+          { id: 'details', label: 'Transcript & Details', icon: Mic2 }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition ${activeTab === tab.id ? 'bg-indigo-500/20 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'analysis' && (
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="grid gap-6 xl:grid-cols-3">
         <section className={cardClassName}>
           <h3 className="mb-2 text-center text-sm font-bold text-white">Deal Probability</h3>
           <MeterRing value={dealProbability} color={probabilityColor} label="Deal Probability" />
@@ -390,7 +422,204 @@ function CallDetail({ token }) {
           {sentimentConfig.label}
         </span>
       </section>
+      </div>)}
 
+      {activeTab === 'actions' && (
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {/* ── 🎯 ACTION CENTER ── */}
+      {actionCenter?.length ? (
+        <section className={cardClassName}>
+          <div className="mb-4 flex items-center gap-2.5">
+            <Target size={18} style={{ color: '#FF6B6B' }} />
+            <h3 className="text-lg font-bold text-white">🎯 Action Center</h3>
+            <span className="ml-auto inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-300">{actionCenter.length} actions</span>
+          </div>
+          <div className="flex flex-col gap-3">
+            {actionCenter.map((action, i) => {
+              const pColors = {
+                critical: { border: 'border-rose-500/30', bg: 'bg-rose-500/10', text: 'text-rose-300', dot: 'bg-rose-400', glow: 'shadow-[0_0_12px_rgba(244,63,94,0.3)]' },
+                high: { border: 'border-amber-500/30', bg: 'bg-amber-500/10', text: 'text-amber-300', dot: 'bg-amber-400', glow: '' },
+                medium: { border: 'border-cyan-500/30', bg: 'bg-cyan-500/10', text: 'text-cyan-300', dot: 'bg-cyan-400', glow: '' },
+                low: { border: 'border-slate-500/30', bg: 'bg-slate-500/10', text: 'text-slate-300', dot: 'bg-slate-400', glow: '' },
+              };
+              const c = pColors[action.priority] || pColors.medium;
+              return (
+                <div key={i} className={`rounded-xl border ${c.border} ${c.bg} p-4 ${c.glow}`}>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${c.dot}`} />
+                    <span className={`text-xs font-extrabold uppercase tracking-wider ${c.text}`}>{action.priority}</span>
+                    {action.owner === 'manager' ? <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-300">MANAGER</span> : null}
+                  </div>
+                  <p className="text-sm font-semibold text-white">{action.action}</p>
+                  {action.reason ? <p className="mt-1 text-sm text-slate-300">{action.reason}</p> : null}
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {action.template ? (
+                      <button type="button" className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20" onClick={() => copyText(action.template, setCopied)}>
+                        <Copy size={12} /> Copy Template
+                      </button>
+                    ) : null}
+                    {action.deadline ? <span className="inline-flex items-center gap-1 text-xs text-slate-400"><Clock size={12} /> {action.deadline}</span> : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {/* ── ⚠️ RISK BANNER ── */}
+      {(riskLevel === 'critical' || riskLevel === 'high' || dealProbability < 40) ? (
+        <section className={`rounded-2xl border ${riskLevel === 'critical' ? 'border-rose-500/30 bg-rose-500/10 shadow-[0_0_30px_rgba(244,63,94,0.15)]' : 'border-amber-500/30 bg-amber-500/10'} p-5`}>
+          <div className="mb-3 flex items-center gap-2">
+            <AlertTriangle size={18} className={riskLevel === 'critical' ? 'text-rose-400' : 'text-amber-400'} />
+            <h3 className="text-lg font-bold text-white">⚠️ Deal Risk: <span className={`uppercase ${riskLevel === 'critical' ? 'text-rose-300' : 'text-amber-300'}`}>{riskLevel}</span></h3>
+          </div>
+          {riskSummary ? <p className="mb-3 text-sm text-slate-300">{riskSummary}</p> : null}
+          {dealRecoveryPlan?.requiredActions?.length ? (
+            <div className="mt-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Recovery Actions ({dealRecoveryPlan.currentProbability}% → {dealRecoveryPlan.targetProbability}%)</p>
+              <ul className="flex flex-col gap-1.5">
+                {dealRecoveryPlan.requiredActions.map((action, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-slate-200">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                    {action}
+                  </li>
+                ))}
+              </ul>
+              {dealRecoveryPlan.timeline ? <p className="mt-2 text-xs text-slate-400">⏰ {dealRecoveryPlan.timeline}</p> : null}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {/* ── 🛡️ OBJECTION PLAYBOOK ── */}
+      {objectionPlaybook?.length ? (
+        <Section title="Objection Playbook" icon={Shield} iconColor="#FF6B6B">
+          <div className="flex flex-col gap-4">
+            {objectionPlaybook.map((obj, i) => (
+              <div key={i} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <AlertTriangle size={14} className="text-rose-300" />
+                  <span className="text-sm font-bold text-white">"{obj.objection}"</span>
+                  <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase ${obj.severity === 'high' ? 'border-rose-500/20 bg-rose-500/10 text-rose-300' : obj.severity === 'low' ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-300'}`}>{obj.severity}</span>
+                </div>
+                {obj.suggestedResponse ? (
+                  <div className="mb-3 rounded-lg border-l-3 border-indigo-400 bg-indigo-500/5 px-4 py-3">
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-indigo-300">💬 What To Say</p>
+                    <p className="text-sm text-slate-200 italic">"{obj.suggestedResponse}"</p>
+                  </div>
+                ) : null}
+                {obj.actionItems?.length ? (
+                  <div className="mb-3">
+                    <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Follow-Up Steps</p>
+                    <ul className="flex flex-col gap-1">
+                      {obj.actionItems.map((item, j) => (
+                        <li key={j} className="flex items-start gap-2 text-sm text-slate-300"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400" />{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {obj.responseTemplate ? (
+                  <button type="button" className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20" onClick={() => copyText(obj.responseTemplate, setCopied)}>
+                    <Mail size={12} /> Copy Email Template
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </Section>
+      ) : null}
+
+      {/* ── ⚔️ COMPETITIVE BATTLE CARD ── */}
+      {competitiveBattleCard?.competitor ? (
+        <Section title={`Battle Card: vs ${competitiveBattleCard.competitor}`} icon={Swords} iconColor="#FFB347">
+          <div className="flex flex-col gap-4">
+            {competitiveBattleCard.winStrategy ? (
+              <div className="rounded-lg border-l-3 border-amber-400 bg-amber-500/5 px-4 py-3">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-amber-300">🏆 Win Strategy</p>
+                <p className="text-sm text-slate-200">{competitiveBattleCard.winStrategy}</p>
+              </div>
+            ) : null}
+            {competitiveBattleCard.counterPoints?.length ? (
+              <div>
+                <p className="mb-2 text-xs font-semibold text-emerald-300">✅ Your Counter-Arguments</p>
+                <ListItems items={competitiveBattleCard.counterPoints} variant="positive" />
+              </div>
+            ) : null}
+            {competitiveBattleCard.talkingPoints?.length ? (
+              <div>
+                <p className="mb-2 text-xs font-semibold text-cyan-300">💬 Talking Points for Customer</p>
+                <ListItems items={competitiveBattleCard.talkingPoints} variant="info" />
+              </div>
+            ) : null}
+          </div>
+        </Section>
+      ) : null}
+
+      {/* ── 🎓 COACHING CORNER ── */}
+      {coachingActions?.topSkillGap ? (
+        <Section title="Coaching Corner" icon={GraduationCap} iconColor="#A78BFA">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose-300">Skill Gap: {coachingActions.topSkillGap}</span>
+            </div>
+            {coachingActions.specificIssue ? (
+              <div className="rounded-lg border-l-3 border-rose-400 bg-rose-500/5 px-4 py-3">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-rose-300">❌ What Went Wrong</p>
+                <p className="text-sm text-slate-200">{coachingActions.specificIssue}</p>
+              </div>
+            ) : null}
+            {coachingActions.coachingTip ? (
+              <div className="rounded-lg border-l-3 border-emerald-400 bg-emerald-500/5 px-4 py-3">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">💡 How To Improve</p>
+                <p className="text-sm text-slate-200">{coachingActions.coachingTip}</p>
+              </div>
+            ) : null}
+            {coachingActions.practiceExercise ? (
+              <div className="rounded-lg border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-3">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-cyan-300">🏋️ Practice Exercise</p>
+                <p className="text-sm text-slate-200">{coachingActions.practiceExercise}</p>
+              </div>
+            ) : null}
+            {coachingActions.managerSummary ? (
+              <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-indigo-300">👔 Manager Summary</p>
+                <p className="text-sm text-slate-200">{coachingActions.managerSummary}</p>
+              </div>
+            ) : null}
+          </div>
+        </Section>
+      ) : null}
+      
+      {followUpRecommendation ? (
+        <Section title="AI Follow-Up Recommendation" icon={Lightbulb} iconColor="#4CC9F0">
+          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">{followUpRecommendation}</div>
+        </Section>
+      ) : null}
+
+      <Section title="Generated Follow-Up Email" icon={Mail} iconColor="#6C63FF">
+        <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm text-slate-300">
+          <p><strong>Subject:</strong> {emailDraft.subject || 'Follow-up on our call'}</p>
+          <pre className="mt-3 max-h-[220px] overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-4 whitespace-pre-wrap text-sm leading-7 text-slate-300">
+            {emailDraft.body || 'No email draft generated.'}
+          </pre>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10" onClick={() => copyText(`Subject: ${emailDraft.subject || 'Follow-up on our call'}\n\n${emailDraft.body || 'No email draft generated.'}`, setEmailCopied)}>
+              {emailCopied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
+              {emailCopied ? 'Copied' : 'Copy Email'}
+            </button>
+            {(emailDraft.cta || emailDraft.tone) ? (
+              <span className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-medium ${getBadgeClassName('neutral')}`}>
+                {emailDraft.tone || 'professional'} | {emailDraft.cta || 'Follow up requested'}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </Section>
+      </div>)}
+
+      {activeTab === 'analysis' && (
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Section title="Conversation Analysis" icon={Activity} iconColor="#4CC9F0">
         <div className="flex flex-col gap-5">
           <div>
@@ -520,107 +749,7 @@ function CallDetail({ token }) {
           </div>
         </Section>
       ) : null}
-
-      {summary ? (
-        <Section title="AI Conversation Summary" icon={MessageSquare} iconColor="#4CC9F0">
-          <p className="rounded-r-xl border-l-3 border-indigo-400 bg-indigo-500/5 px-4 py-4 text-sm leading-8 text-slate-300">{summary}</p>
-        </Section>
-      ) : null}
-
-      <Section title="Review Extracted Metadata" icon={Target} iconColor="#6C63FF">
-        {!editMode ? (
-          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">
-            <p><strong>Call Title:</strong> {resolvedMeta.callTitle || 'Untitled Call'}</p>
-            <p className="capitalize"><strong>Call Type:</strong> {resolvedMeta.callType || 'other'}</p>
-            <p><strong>Product:</strong> {resolvedMeta.productName || 'Unknown'}</p>
-            <p><strong>Customer Name:</strong> {resolvedMeta.customerName || 'Unknown'}</p>
-            <p><strong>Customer Email:</strong> {resolvedMeta.customerEmail || 'Not available'}</p>
-            <p><strong>Customer Phone:</strong> {resolvedMeta.customerPhone || 'Not available'}</p>
-            <div className="mt-3">
-              <button
-                type="button"
-                className="rounded-lg bg-[#6C63FF] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#5d54f4]"
-                onClick={() => {
-                  setMetaForm({
-                    callTitle: resolvedMeta.callTitle,
-                    callType: resolvedMeta.callType,
-                    productName: resolvedMeta.productName,
-                    customerName: resolvedMeta.customerName,
-                    customerEmail: resolvedMeta.customerEmail,
-                    customerPhone: resolvedMeta.customerPhone,
-                  });
-                  setEditMode(true);
-                }}
-              >
-                Edit Metadata
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4">
-            <div className="grid gap-3">
-              <input className={inputClassName} placeholder="Call title" value={metaForm.callTitle} onChange={(event) => setMetaForm((current) => ({ ...current, callTitle: event.target.value }))} />
-              <select className={inputClassName} value={metaForm.callType} onChange={(event) => setMetaForm((current) => ({ ...current, callType: event.target.value }))}>
-                <option value="sales">Sales</option>
-                <option value="service">Service</option>
-                <option value="enquiry">Enquiry</option>
-                <option value="complaint">Complaint</option>
-                <option value="support">Support</option>
-                <option value="renewal">Renewal</option>
-                <option value="upsell">Upsell</option>
-                <option value="other">Other</option>
-              </select>
-              <input className={inputClassName} placeholder="Product name" value={metaForm.productName} onChange={(event) => setMetaForm((current) => ({ ...current, productName: event.target.value }))} />
-              <input className={inputClassName} placeholder="Customer name" value={metaForm.customerName} onChange={(event) => setMetaForm((current) => ({ ...current, customerName: event.target.value }))} />
-              <input className={inputClassName} placeholder="Customer email" value={metaForm.customerEmail} onChange={(event) => setMetaForm((current) => ({ ...current, customerEmail: event.target.value }))} />
-              <input className={inputClassName} placeholder="Customer phone" value={metaForm.customerPhone} onChange={(event) => setMetaForm((current) => ({ ...current, customerPhone: event.target.value }))} />
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button type="button" className="rounded-lg bg-[#6C63FF] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#5d54f4] disabled:opacity-50" onClick={saveMetadata} disabled={savingMeta}>
-                {savingMeta ? 'Saving...' : 'Save Metadata'}
-              </button>
-              <button type="button" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10" onClick={() => setEditMode(false)} disabled={savingMeta}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </Section>
-
-      {followUpRecommendation ? (
-        <Section title="AI Follow-Up Recommendation" icon={Lightbulb} iconColor="#4CC9F0">
-          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">{followUpRecommendation}</div>
-        </Section>
-      ) : null}
-
-      <Section title="Generated Follow-Up Email" icon={Mail} iconColor="#6C63FF">
-        <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm text-slate-300">
-          <p><strong>Subject:</strong> {emailDraft.subject || 'Follow-up on our call'}</p>
-          <pre className="mt-3 max-h-[220px] overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-4 whitespace-pre-wrap text-sm leading-7 text-slate-300">
-            {emailDraft.body || 'No email draft generated.'}
-          </pre>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button type="button" className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10" onClick={() => copyText(`Subject: ${emailDraft.subject || 'Follow-up on our call'}\n\n${emailDraft.body || 'No email draft generated.'}`, setEmailCopied)}>
-              {emailCopied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
-              {emailCopied ? 'Copied' : 'Copy Email'}
-            </button>
-            {(emailDraft.cta || emailDraft.tone) ? (
-              <span className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-medium ${getBadgeClassName('neutral')}`}>
-                {emailDraft.tone || 'professional'} | {emailDraft.cta || 'Follow up requested'}
-              </span>
-            ) : null}
-          </div>
-        </div>
-      </Section>
-
-      <Section title="Customer Details" icon={Target} iconColor="#FFB347" defaultOpen={false}>
-        <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">
-          <p><strong>Name:</strong> {metaForm.customerName || call.customer_name || customer.name || 'Unknown'}</p>
-          <p><strong>Email:</strong> {metaForm.customerEmail || call.customer_email || customer.email || 'Not available'}</p>
-          <p><strong>Phone:</strong> {metaForm.customerPhone || call.customer_phone || customer.phone || 'Not available'}</p>
-        </div>
-      </Section>
-
+      
       <div className="grid gap-6 lg:grid-cols-2">
         <Section title="Buying Signals" icon={TrendingUp} iconColor="#00D4AA">
           <ListItems items={buyingSignals} variant="positive" />
@@ -784,6 +913,76 @@ function CallDetail({ token }) {
           </Section>
         </div>
       </div>
+      
+      </div>)}
+
+      {activeTab === 'details' && (
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {summary ? (
+        <Section title="AI Conversation Summary" icon={MessageSquare} iconColor="#4CC9F0">
+          <p className="rounded-r-xl border-l-3 border-indigo-400 bg-indigo-500/5 px-4 py-4 text-sm leading-8 text-slate-300">{summary}</p>
+        </Section>
+      ) : null}
+
+      <Section title="Review Extracted Metadata" icon={Target} iconColor="#6C63FF">
+        {!editMode ? (
+          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">
+            <p><strong>Call Title:</strong> {resolvedMeta.callTitle || 'Untitled Call'}</p>
+            <p className="capitalize"><strong>Call Type:</strong> {resolvedMeta.callType || 'other'}</p>
+            <p><strong>Product:</strong> {resolvedMeta.productName || 'Unknown'}</p>
+            <p><strong>Customer Name:</strong> {resolvedMeta.customerName || 'Unknown'}</p>
+            <p><strong>Customer Email:</strong> {resolvedMeta.customerEmail || 'Not available'}</p>
+            <p><strong>Customer Phone:</strong> {resolvedMeta.customerPhone || 'Not available'}</p>
+            <div className="mt-3">
+              <button
+                type="button"
+                className="rounded-lg bg-[#6C63FF] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#5d54f4]"
+                onClick={() => {
+                  setMetaForm({
+                    callTitle: resolvedMeta.callTitle,
+                    callType: resolvedMeta.callType,
+                    productName: resolvedMeta.productName,
+                    customerName: resolvedMeta.customerName,
+                    customerEmail: resolvedMeta.customerEmail,
+                    customerPhone: resolvedMeta.customerPhone,
+                  });
+                  setEditMode(true);
+                }}
+              >
+                Edit Metadata
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4">
+            <div className="grid gap-3">
+              <input className={inputClassName} placeholder="Call title" value={metaForm.callTitle} onChange={(event) => setMetaForm((current) => ({ ...current, callTitle: event.target.value }))} />
+              <select className={inputClassName} value={metaForm.callType} onChange={(event) => setMetaForm((current) => ({ ...current, callType: event.target.value }))}>
+                <option value="sales">Sales</option>
+                <option value="service">Service</option>
+                <option value="enquiry">Enquiry</option>
+                <option value="complaint">Complaint</option>
+                <option value="support">Support</option>
+                <option value="renewal">Renewal</option>
+                <option value="upsell">Upsell</option>
+                <option value="other">Other</option>
+              </select>
+              <input className={inputClassName} placeholder="Product name" value={metaForm.productName} onChange={(event) => setMetaForm((current) => ({ ...current, productName: event.target.value }))} />
+              <input className={inputClassName} placeholder="Customer name" value={metaForm.customerName} onChange={(event) => setMetaForm((current) => ({ ...current, customerName: event.target.value }))} />
+              <input className={inputClassName} placeholder="Customer email" value={metaForm.customerEmail} onChange={(event) => setMetaForm((current) => ({ ...current, customerEmail: event.target.value }))} />
+              <input className={inputClassName} placeholder="Customer phone" value={metaForm.customerPhone} onChange={(event) => setMetaForm((current) => ({ ...current, customerPhone: event.target.value }))} />
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button type="button" className="rounded-lg bg-[#6C63FF] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#5d54f4] disabled:opacity-50" onClick={saveMetadata} disabled={savingMeta}>
+                {savingMeta ? 'Saving...' : 'Save Metadata'}
+              </button>
+              <button type="button" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10" onClick={() => setEditMode(false)} disabled={savingMeta}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </Section>
 
       {call.transcript ? (
         <Section title="Full Transcript" icon={Mic2} defaultOpen={false}>
@@ -799,6 +998,7 @@ function CallDetail({ token }) {
           <pre className="max-h-[400px] overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-5 whitespace-pre-wrap text-sm leading-7 text-slate-300">{call.transcript}</pre>
         </Section>
       ) : null}
+      </div>)}
     </div>
   );
 }
