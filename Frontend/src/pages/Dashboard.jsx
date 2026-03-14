@@ -121,6 +121,7 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 	const [analytics, setAnalytics] = useState(defaultAnalytics);
 	const [calls, setCalls] = useState(defaultCalls);
 	const [competitors, setCompetitors] = useState(defaultCompetitors);
+	const [riskCalls, setRiskCalls] = useState([]);
 	const [dashboardLoading, setDashboardLoading] = useState(true);
 	const [dashboardError, setDashboardError] = useState("");
 	const navigate = useNavigate();
@@ -132,10 +133,11 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 			setDashboardError("");
 
 			try {
-				const [analyticsRes, callsRes, competitorsRes] = await Promise.all([
+				const [analyticsRes, callsRes, competitorsRes, riskRes] = await Promise.all([
 					dashboardApi.getAnalytics(token),
 					dashboardApi.getCalls(token),
 					dashboardApi.getCompetitors(token),
+					dashboardApi.getRiskRadar(token),
 				]);
 
 				if (analyticsRes?.analytics) {
@@ -148,6 +150,10 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 
 				if (competitorsRes?.competitorInsights) {
 					setCompetitors(competitorsRes.competitorInsights);
+				}
+
+				if (Array.isArray(riskRes?.riskCalls)) {
+					setRiskCalls(riskRes.riskCalls);
 				}
 			} catch {
 				setDashboardError("Could not connect to backend dashboard data.");
@@ -438,7 +444,39 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 					</div>
 				</section>
 
+			{riskCalls.length ? (
 				<section className={`${cardClassName} mt-6`}>
+					<div className="mb-6 flex items-center justify-between gap-3">
+						<div>
+							<h3 className="text-lg font-bold text-white">⚡ Risk Radar — Deals Needing Attention</h3>
+							<p className="mt-1 text-sm text-slate-400">{riskCalls.length} deal{riskCalls.length > 1 ? 's' : ''} at risk based on AI analysis.</p>
+						</div>
+						<AlertTriangle size={18} className="text-rose-300" />
+					</div>
+					<div className="flex flex-col gap-3">
+						{riskCalls.slice(0, 5).map((rc) => {
+							const rColor = rc.riskLevel === 'critical' ? '#FF6B6B' : rc.riskLevel === 'high' ? '#FFB347' : '#4CC9F0';
+							const rBg = rc.riskLevel === 'critical' ? 'border-rose-500/20 bg-rose-500/5' : rc.riskLevel === 'high' ? 'border-amber-500/20 bg-amber-500/5' : 'border-cyan-500/20 bg-cyan-500/5';
+							return (
+								<Link key={rc.callId} to={`/dashboard/calls/${rc.callId}`} className={`rounded-xl border ${rBg} p-4 transition hover:bg-white/[0.04] ${rc.riskLevel === 'critical' ? 'shadow-[0_0_20px_rgba(244,63,94,0.1)]' : ''}`}>
+									<div className="flex flex-wrap items-center justify-between gap-2">
+										<div className="flex items-center gap-2">
+											<span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: rColor }} />
+											<span className="text-sm font-bold text-white">{rc.callTitle}</span>
+											<span className="rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase" style={{ borderColor: `${rColor}33`, color: rColor }}>{rc.riskLevel}</span>
+										</div>
+										<span className="text-xs font-bold" style={{ color: rColor }}>{rc.dealProbability}%</span>
+									</div>
+									{rc.riskSummary ? <p className="mt-1.5 text-sm text-slate-400">{rc.riskSummary.length > 120 ? `${rc.riskSummary.slice(0, 120)}...` : rc.riskSummary}</p> : null}
+									{rc.topAction ? <p className="mt-1.5 text-xs text-slate-300">→ <span className="font-semibold">{rc.topAction.action}</span></p> : null}
+								</Link>
+							);
+						})}
+					</div>
+				</section>
+			) : null}
+
+			<section className={`${cardClassName} mt-6`}>
 					<div className="mb-6 flex flex-wrap items-center justify-between gap-3">
 						<div>
 							<h3 className="text-lg font-bold text-white">Recent Analyzed Calls</h3>

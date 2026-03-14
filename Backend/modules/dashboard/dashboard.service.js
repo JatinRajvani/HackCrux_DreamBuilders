@@ -265,6 +265,38 @@ export const getCompetitorAnalysis = async () => {
   }
 };
 
+export const getRiskRadar = async () => {
+  try {
+    const calls = await CallModel.findAll({ status: "analyzed" });
+
+    return calls
+      .filter((call) => {
+        const prob = call.aiInsights?.dealProbability || 0;
+        const sentiment = call.aiInsights?.sentiment;
+        const riskLevel = call.aiInsights?.riskLevel;
+        return prob < 50 || sentiment === "negative" || riskLevel === "critical" || riskLevel === "high";
+      })
+      .map((call) => ({
+        callId: call.callId,
+        callTitle: call.call_title || call.aiInsights?.callTitle || call.aiInsights?.productName || "Untitled Call",
+        riskLevel: call.aiInsights?.riskLevel || "medium",
+        dealProbability: call.aiInsights?.dealProbability || 0,
+        sentiment: call.aiInsights?.sentiment || "neutral",
+        topAction: call.aiInsights?.actionCenter?.[0] || null,
+        riskSummary: call.aiInsights?.riskSummary || "",
+        productName: call.aiInsights?.productName || call.product_name || "Unknown",
+        createdAt: call.createdAt,
+      }))
+      .sort((a, b) => {
+        const order = { critical: 0, high: 1, medium: 2, low: 3 };
+        return (order[a.riskLevel] || 2) - (order[b.riskLevel] || 2);
+      });
+  } catch (error) {
+    console.error("Error generating risk radar:", error);
+    throw error;
+  }
+};
+
 export const updateCallMetadata = async (callId, metadata = {}) => {
   const existing = await CallModel.findAll({ callId });
   const existingCall = existing[0] || null;

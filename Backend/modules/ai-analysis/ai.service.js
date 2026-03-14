@@ -142,6 +142,43 @@ const normalizeInsights = (rawInsights, fallbackSummary = "") => ({
     impact: String(m?.impact || "neutral").trim().toLowerCase(),
     description: String(m?.description || "").trim(),
   })),
+  // ── Actionable Intelligence ──
+  actionCenter: toObjectArray(rawInsights?.actionCenter).map((a) => ({
+    priority: String(a?.priority || "medium").trim().toLowerCase(),
+    action: String(a?.action || "").trim(),
+    reason: String(a?.reason || "").trim(),
+    template: String(a?.template || "").trim(),
+    deadline: String(a?.deadline || "").trim(),
+    owner: String(a?.owner || "rep").trim().toLowerCase(),
+  })),
+  objectionPlaybook: toObjectArray(rawInsights?.objectionPlaybook).map((o) => ({
+    objection: String(o?.objection || "").trim(),
+    severity: String(o?.severity || "medium").trim().toLowerCase(),
+    suggestedResponse: String(o?.suggestedResponse || "").trim(),
+    actionItems: toStringArray(o?.actionItems),
+    responseTemplate: String(o?.responseTemplate || "").trim(),
+  })),
+  riskLevel: String(rawInsights?.riskLevel || "medium").trim().toLowerCase(),
+  riskSummary: String(rawInsights?.riskSummary || "").trim(),
+  dealRecoveryPlan: {
+    currentProbability: Math.max(0, Math.min(100, Number.parseInt(rawInsights?.dealRecoveryPlan?.currentProbability ?? rawInsights?.dealProbability ?? 50, 10) || 50)),
+    targetProbability: Math.max(0, Math.min(100, Number.parseInt(rawInsights?.dealRecoveryPlan?.targetProbability ?? 70, 10) || 70)),
+    requiredActions: toStringArray(rawInsights?.dealRecoveryPlan?.requiredActions),
+    timeline: String(rawInsights?.dealRecoveryPlan?.timeline || "").trim(),
+  },
+  competitiveBattleCard: {
+    competitor: String(rawInsights?.competitiveBattleCard?.competitor || "").trim(),
+    counterPoints: toStringArray(rawInsights?.competitiveBattleCard?.counterPoints),
+    winStrategy: String(rawInsights?.competitiveBattleCard?.winStrategy || "").trim(),
+    talkingPoints: toStringArray(rawInsights?.competitiveBattleCard?.talkingPoints),
+  },
+  coachingActions: {
+    topSkillGap: String(rawInsights?.coachingActions?.topSkillGap || "").trim(),
+    specificIssue: String(rawInsights?.coachingActions?.specificIssue || "").trim(),
+    coachingTip: String(rawInsights?.coachingActions?.coachingTip || "").trim(),
+    practiceExercise: String(rawInsights?.coachingActions?.practiceExercise || "").trim(),
+    managerSummary: String(rawInsights?.coachingActions?.managerSummary || "").trim(),
+  },
 });
 
 export const analyzeConversation = async (transcript) => {
@@ -244,7 +281,47 @@ Return this exact schema:
       "impact": "positive|negative|neutral",
       "description": "what happened and why it matters"
     }
-  ]
+  ],
+  "actionCenter": [
+    {
+      "priority": "critical|high|medium|low",
+      "action": "specific action the rep should take immediately",
+      "reason": "why this action matters for the deal",
+      "template": "ready-to-use message/email template for this action",
+      "deadline": "suggested timeframe like '24 hours' or '3 days'",
+      "owner": "rep|manager"
+    }
+  ],
+  "objectionPlaybook": [
+    {
+      "objection": "the specific objection raised",
+      "severity": "high|medium|low",
+      "suggestedResponse": "exactly what to say to handle this objection",
+      "actionItems": ["concrete follow-up step 1", "step 2"],
+      "responseTemplate": "ready-to-send email template addressing this objection"
+    }
+  ],
+  "riskLevel": "critical|high|medium|low",
+  "riskSummary": "1-2 sentence summary of why this deal is at risk and what is the biggest threat",
+  "dealRecoveryPlan": {
+    "currentProbability": 35,
+    "targetProbability": 60,
+    "requiredActions": ["specific step 1 to improve deal chances", "step 2"],
+    "timeline": "timeframe within which actions must be taken"
+  },
+  "competitiveBattleCard": {
+    "competitor": "primary competitor name or empty string if none mentioned",
+    "counterPoints": ["counter-argument 1 against competitor advantage", "counter-argument 2"],
+    "winStrategy": "overall strategy to win against this competitor",
+    "talkingPoints": ["talking point 1 to use with customer", "talking point 2"]
+  },
+  "coachingActions": {
+    "topSkillGap": "the weakest skill name",
+    "specificIssue": "what specifically went wrong in THIS call related to that skill",
+    "coachingTip": "specific advice on how to improve, with an example of what they should have said",
+    "practiceExercise": "a concrete exercise to practice this skill",
+    "managerSummary": "1-2 sentence summary for the manager about what coaching this rep needs"
+  }
 }
 
 Rules:
@@ -267,6 +344,16 @@ Rules:
 - conversationAnalysis.customerEngagementScore: 1-10, how engaged/interested the customer seemed.
 - conversationAnalysis.objectionResponses: pair each objection with how it was handled and rate effectiveness.
 - keyMoments: 3-6 pivotal moments (breakthroughs, rapport builders, deal risks, commitment signals).
+
+ACTIONABLE INTELLIGENCE RULES:
+- For every objection, provide a specific "suggestedResponse" the rep can say word-for-word, and an "actionItems" array of concrete steps.
+- For every buying signal, estimate urgency and give a specific action with deadline.
+- Generate an "actionCenter" array of 3-5 prioritized actions (critical/high/medium/low) the rep should take immediately. Each action must have a reason, a ready-to-use template, and a deadline.
+- Classify overall "riskLevel" as critical/high/medium/low based on deal probability, sentiment, and objection severity.
+- If competitors are mentioned, generate a "competitiveBattleCard" with counter-arguments and talking points.
+- For the lowest-scoring skill, provide a specific coaching tip with an example from THIS call in "coachingActions".
+- All follow-up recommendations must include a specific deadline.
+- Every insight must answer: "So what? What should the human DO with this information?"
 - Do not add markdown, comments, or extra text — return ONLY valid JSON.`,
         },
         {

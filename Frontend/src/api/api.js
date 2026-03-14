@@ -93,4 +93,13 @@ export const dashboardApi = {
 
     return { blob, fileName };
   },
+
+  getRiskRadar: async (token = null) => {
+    try {
+      const data = await tryFetchJson("/dashboard/risk-radar", token);
+      return { riskCalls: data.riskCalls || [] };
+    } catch {
+      return { riskCalls: [] };
+    }
+  },
 };
