@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Package, Plus, X, Tag, FileText, Shield, Archive } from "lucide-react";
+import { Package, Plus, X, Tag, FileText, Shield, Archive, ArrowRight } from "lucide-react";
 import { productsApi } from "../api/api";
+import ProductIntelligence from "./ProductIntelligence";
 
 const Products = ({ user, token }) => {
   const [products, setProducts] = useState([]);
@@ -8,6 +9,7 @@ const Products = ({ user, token }) => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -70,6 +72,11 @@ const Products = ({ user, token }) => {
     );
   }
 
+  // If a product is clicked, show its specific intelligence view
+  if (selectedProduct) {
+    return <ProductIntelligence product={selectedProduct} token={token} onBack={() => setSelectedProduct(null)} />;
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header Area */}
@@ -116,15 +123,23 @@ const Products = ({ user, token }) => {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {products.map((prod) => (
-               <div key={prod._id} className="relative overflow-hidden flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-5 transition hover:bg-white/[0.05] hover:border-amber-400/30">
+               <div 
+                  key={prod._id} 
+                  onClick={() => setSelectedProduct(prod)}
+                  className="cursor-pointer group relative overflow-hidden flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-5 transition hover:bg-white/[0.05] hover:border-amber-400/30 hover:shadow-lg hover:shadow-amber-500/5"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400"><Tag size={16}/></span>
-                       <h3 className="text-base font-bold text-white">{prod.productName}</h3>
+                       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 transition group-hover:scale-110 group-hover:bg-amber-500/20"><Tag size={16}/></span>
+                       <h3 className="text-base font-bold text-white transition group-hover:text-amber-300">{prod.productName}</h3>
                     </div>
                   </div>
                   {prod.category && <span className="inline-flex w-fit rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-0.5 text-[10px] uppercase font-bold text-indigo-300">{prod.category}</span>}
                   <p className="text-sm text-slate-400 flex-1">{prod.description || "No description provided."}</p>
+                  <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-3">
+                     <span className="text-xs font-semibold text-slate-500 transition group-hover:text-slate-300">View Intelligence</span>
+                     <ArrowRight size={14} className="text-slate-500 transition group-hover:translate-x-1 group-hover:text-amber-400" />
+                  </div>
                </div>
             ))}
           </div>

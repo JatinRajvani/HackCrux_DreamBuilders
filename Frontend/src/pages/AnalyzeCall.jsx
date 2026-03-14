@@ -138,7 +138,7 @@ function AnalyzeCall({ token }) {
 		formData.append('customer_name', customerName || 'Unknown');
 		formData.append('customer_email', customerEmail);
 		formData.append('customer_phone', customerPhone || '');
-		if (productId) formData.append('productId', productId);
+		formData.append('productId', productId || '');
 		const response = await fetch(`${API_BASE_URL}/audio/upload`, {
 			method: 'POST',
 			headers: { 'Authorization': `Bearer ${token}` },
@@ -178,7 +178,7 @@ function AnalyzeCall({ token }) {
 				customer_name: customerName || 'Unknown',
 				customer_email: customerEmail,
 				customer_phone: customerPhone || '',
-				productId: productId || undefined
+				productId: productId || ''
 			}),
 		});
 		const data = await response.json();

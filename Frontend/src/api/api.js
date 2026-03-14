@@ -93,6 +93,15 @@ export const dashboardApi = {
     }
   },
 
+  getProductAnalysis: async (productName, token = null) => {
+    try {
+      const data = await tryFetchJson(`/dashboard/product?product_name=${encodeURIComponent(productName)}`, token);
+      return { calls: normalizeCalls(data.calls || data.data || []) };
+    } catch {
+      return { calls: [] };
+    }
+  },
+
   getAnalytics: async (token = null) => {
     try {
       const data = await tryFetchJson("/dashboard/analytics", token);
@@ -158,4 +167,24 @@ export const productsApi = {
   addProduct: async (productData, token) => {
     return await tryFetchJsonMethod("POST", "/products", productData, token);
   }
+};
+
+export const productIntelligenceApi = {
+  getOverview: async (token) => {
+    try {
+      const data = await tryFetchJson("/product-intelligence/overview", token);
+      return { products: data.products || [] };
+    } catch {
+      return { products: [] };
+    }
+  },
+
+  getProductIntelligence: async (productId, token) => {
+    try {
+      const data = await tryFetchJson(`/product-intelligence/${productId}`, token);
+      return data;
+    } catch {
+      return null;
+    }
+  },
 };
