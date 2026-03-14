@@ -10,23 +10,30 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	User,
+	Users,
 	Zap,
 	X,
+	Package,
 } from "lucide-react";
 
-const navItems = [
-	{ icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-	{ icon: Upload, label: "Analyze Call", path: "/dashboard/analyze" },
-	{ icon: Phone, label: "All Calls", path: "/dashboard/calls" },
-	{ icon: BarChart3, label: "Insights", path: "/dashboard/insights" },
-	{ icon: TrendingUp, label: "Top Deals", path: "/dashboard/top-deals" },
-	{ icon: AlertTriangle, label: "High Risk", path: "/dashboard/high-risk" },
-	{ icon: User, label: "Profile", path: "/dashboard/profile" },
-];
 
-const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
+const Sidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose, user }) => {
 	const sidebarWidthClass = collapsed ? "md:w-[68px]" : "md:w-[240px]";
 	const mobileStateClass = mobileOpen ? "translate-x-0" : "-translate-x-full";
+
+	const navItems = [
+		{ icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+		{ icon: Upload, label: "Analyze Call", path: "/dashboard/analyze" },
+		{ icon: Phone, label: "All Calls", path: "/dashboard/calls" },
+		{ icon: BarChart3, label: "Insights", path: "/dashboard/insights" },
+		{ icon: TrendingUp, label: "Top Deals", path: "/dashboard/top-deals" },
+		{ icon: AlertTriangle, label: "High Risk", path: "/dashboard/high-risk" },
+		...(user?.role === "admin" ? [
+			{ icon: Users, label: "Employees", path: "/dashboard/employees" },
+			{ icon: Package, label: "Products", path: "/dashboard/products" }
+		] : []),
+		{ icon: User, label: "Profile", path: "/dashboard/profile" },
+	];
 
 	return (
 		<aside

@@ -8,7 +8,33 @@ const tryFetchJson = async (path, token = null) => {
   
   const response = await fetch(`${API_BASE_URL}${path}`, { headers });
   if (!response.ok) {
-    throw new Error("Request failed");
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || "Request failed");
+  }
+  return response.json();
+};
+
+const tryFetchJsonMethod = async (method, path, body = null, token = null) => {
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const options = {
+    method,
+    headers
+  };
+  
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, options);
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || "Request failed");
   }
   return response.json();
 };
@@ -102,4 +128,34 @@ export const dashboardApi = {
       return { riskCalls: [] };
     }
   },
+};
+
+export const usersApi = {
+  getEmployees: async (token) => {
+    try {
+      const data = await tryFetchJson("/users/employees", token);
+      return { employees: data.data || [] };
+    } catch {
+      return { employees: [] };
+    }
+  },
+
+  addEmployee: async (employeeData, token) => {
+    return await tryFetchJsonMethod("POST", "/users/employees", employeeData, token);
+  }
+};
+
+export const productsApi = {
+  getProducts: async (token) => {
+    try {
+      const data = await tryFetchJson("/products", token);
+      return { products: data.data || [] };
+    } catch {
+      return { products: [] };
+    }
+  },
+
+  addProduct: async (productData, token) => {
+    return await tryFetchJsonMethod("POST", "/products", productData, token);
+  }
 };
