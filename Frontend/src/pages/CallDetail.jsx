@@ -159,6 +159,7 @@ function CallDetail({ token }) {
   const [editMode, setEditMode] = useState(false);
   const [call, setCall] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('actions');
   const [metaForm, setMetaForm] = useState({
     callTitle: '',
     callType: 'other',
@@ -361,7 +362,27 @@ function CallDetail({ token }) {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      {/* ── TABS NAVIGATION ── */}
+      <div className="mb-2 mt-4 flex overflow-x-auto rounded-xl border border-white/10 bg-[#161829] p-1.5 md:w-fit">
+        {[
+          { id: 'actions', label: 'Overview & Actions', icon: Target },
+          { id: 'analysis', label: 'Deep Analysis', icon: BarChart3 },
+          { id: 'details', label: 'Transcript & Details', icon: Mic2 }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition ${activeTab === tab.id ? 'bg-indigo-500/20 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'analysis' && (
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="grid gap-6 xl:grid-cols-3">
         <section className={cardClassName}>
           <h3 className="mb-2 text-center text-sm font-bold text-white">Deal Probability</h3>
           <MeterRing value={dealProbability} color={probabilityColor} label="Deal Probability" />
@@ -401,7 +422,10 @@ function CallDetail({ token }) {
           {sentimentConfig.label}
         </span>
       </section>
+      </div>)}
 
+      {activeTab === 'actions' && (
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* ── 🎯 ACTION CENTER ── */}
       {actionCenter?.length ? (
         <section className={cardClassName}>
@@ -566,7 +590,36 @@ function CallDetail({ token }) {
           </div>
         </Section>
       ) : null}
+      
+      {followUpRecommendation ? (
+        <Section title="AI Follow-Up Recommendation" icon={Lightbulb} iconColor="#4CC9F0">
+          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">{followUpRecommendation}</div>
+        </Section>
+      ) : null}
 
+      <Section title="Generated Follow-Up Email" icon={Mail} iconColor="#6C63FF">
+        <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm text-slate-300">
+          <p><strong>Subject:</strong> {emailDraft.subject || 'Follow-up on our call'}</p>
+          <pre className="mt-3 max-h-[220px] overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-4 whitespace-pre-wrap text-sm leading-7 text-slate-300">
+            {emailDraft.body || 'No email draft generated.'}
+          </pre>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10" onClick={() => copyText(`Subject: ${emailDraft.subject || 'Follow-up on our call'}\n\n${emailDraft.body || 'No email draft generated.'}`, setEmailCopied)}>
+              {emailCopied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
+              {emailCopied ? 'Copied' : 'Copy Email'}
+            </button>
+            {(emailDraft.cta || emailDraft.tone) ? (
+              <span className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-medium ${getBadgeClassName('neutral')}`}>
+                {emailDraft.tone || 'professional'} | {emailDraft.cta || 'Follow up requested'}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </Section>
+      </div>)}
+
+      {activeTab === 'analysis' && (
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Section title="Conversation Analysis" icon={Activity} iconColor="#4CC9F0">
         <div className="flex flex-col gap-5">
           <div>
@@ -696,107 +749,7 @@ function CallDetail({ token }) {
           </div>
         </Section>
       ) : null}
-
-      {summary ? (
-        <Section title="AI Conversation Summary" icon={MessageSquare} iconColor="#4CC9F0">
-          <p className="rounded-r-xl border-l-3 border-indigo-400 bg-indigo-500/5 px-4 py-4 text-sm leading-8 text-slate-300">{summary}</p>
-        </Section>
-      ) : null}
-
-      <Section title="Review Extracted Metadata" icon={Target} iconColor="#6C63FF">
-        {!editMode ? (
-          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">
-            <p><strong>Call Title:</strong> {resolvedMeta.callTitle || 'Untitled Call'}</p>
-            <p className="capitalize"><strong>Call Type:</strong> {resolvedMeta.callType || 'other'}</p>
-            <p><strong>Product:</strong> {resolvedMeta.productName || 'Unknown'}</p>
-            <p><strong>Customer Name:</strong> {resolvedMeta.customerName || 'Unknown'}</p>
-            <p><strong>Customer Email:</strong> {resolvedMeta.customerEmail || 'Not available'}</p>
-            <p><strong>Customer Phone:</strong> {resolvedMeta.customerPhone || 'Not available'}</p>
-            <div className="mt-3">
-              <button
-                type="button"
-                className="rounded-lg bg-[#6C63FF] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#5d54f4]"
-                onClick={() => {
-                  setMetaForm({
-                    callTitle: resolvedMeta.callTitle,
-                    callType: resolvedMeta.callType,
-                    productName: resolvedMeta.productName,
-                    customerName: resolvedMeta.customerName,
-                    customerEmail: resolvedMeta.customerEmail,
-                    customerPhone: resolvedMeta.customerPhone,
-                  });
-                  setEditMode(true);
-                }}
-              >
-                Edit Metadata
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4">
-            <div className="grid gap-3">
-              <input className={inputClassName} placeholder="Call title" value={metaForm.callTitle} onChange={(event) => setMetaForm((current) => ({ ...current, callTitle: event.target.value }))} />
-              <select className={inputClassName} value={metaForm.callType} onChange={(event) => setMetaForm((current) => ({ ...current, callType: event.target.value }))}>
-                <option value="sales">Sales</option>
-                <option value="service">Service</option>
-                <option value="enquiry">Enquiry</option>
-                <option value="complaint">Complaint</option>
-                <option value="support">Support</option>
-                <option value="renewal">Renewal</option>
-                <option value="upsell">Upsell</option>
-                <option value="other">Other</option>
-              </select>
-              <input className={inputClassName} placeholder="Product name" value={metaForm.productName} onChange={(event) => setMetaForm((current) => ({ ...current, productName: event.target.value }))} />
-              <input className={inputClassName} placeholder="Customer name" value={metaForm.customerName} onChange={(event) => setMetaForm((current) => ({ ...current, customerName: event.target.value }))} />
-              <input className={inputClassName} placeholder="Customer email" value={metaForm.customerEmail} onChange={(event) => setMetaForm((current) => ({ ...current, customerEmail: event.target.value }))} />
-              <input className={inputClassName} placeholder="Customer phone" value={metaForm.customerPhone} onChange={(event) => setMetaForm((current) => ({ ...current, customerPhone: event.target.value }))} />
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button type="button" className="rounded-lg bg-[#6C63FF] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#5d54f4] disabled:opacity-50" onClick={saveMetadata} disabled={savingMeta}>
-                {savingMeta ? 'Saving...' : 'Save Metadata'}
-              </button>
-              <button type="button" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10" onClick={() => setEditMode(false)} disabled={savingMeta}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </Section>
-
-      {followUpRecommendation ? (
-        <Section title="AI Follow-Up Recommendation" icon={Lightbulb} iconColor="#4CC9F0">
-          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">{followUpRecommendation}</div>
-        </Section>
-      ) : null}
-
-      <Section title="Generated Follow-Up Email" icon={Mail} iconColor="#6C63FF">
-        <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm text-slate-300">
-          <p><strong>Subject:</strong> {emailDraft.subject || 'Follow-up on our call'}</p>
-          <pre className="mt-3 max-h-[220px] overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-4 whitespace-pre-wrap text-sm leading-7 text-slate-300">
-            {emailDraft.body || 'No email draft generated.'}
-          </pre>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button type="button" className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10" onClick={() => copyText(`Subject: ${emailDraft.subject || 'Follow-up on our call'}\n\n${emailDraft.body || 'No email draft generated.'}`, setEmailCopied)}>
-              {emailCopied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
-              {emailCopied ? 'Copied' : 'Copy Email'}
-            </button>
-            {(emailDraft.cta || emailDraft.tone) ? (
-              <span className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-medium ${getBadgeClassName('neutral')}`}>
-                {emailDraft.tone || 'professional'} | {emailDraft.cta || 'Follow up requested'}
-              </span>
-            ) : null}
-          </div>
-        </div>
-      </Section>
-
-      <Section title="Customer Details" icon={Target} iconColor="#FFB347" defaultOpen={false}>
-        <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">
-          <p><strong>Name:</strong> {metaForm.customerName || call.customer_name || customer.name || 'Unknown'}</p>
-          <p><strong>Email:</strong> {metaForm.customerEmail || call.customer_email || customer.email || 'Not available'}</p>
-          <p><strong>Phone:</strong> {metaForm.customerPhone || call.customer_phone || customer.phone || 'Not available'}</p>
-        </div>
-      </Section>
-
+      
       <div className="grid gap-6 lg:grid-cols-2">
         <Section title="Buying Signals" icon={TrendingUp} iconColor="#00D4AA">
           <ListItems items={buyingSignals} variant="positive" />
@@ -960,6 +913,76 @@ function CallDetail({ token }) {
           </Section>
         </div>
       </div>
+      
+      </div>)}
+
+      {activeTab === 'details' && (
+      <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {summary ? (
+        <Section title="AI Conversation Summary" icon={MessageSquare} iconColor="#4CC9F0">
+          <p className="rounded-r-xl border-l-3 border-indigo-400 bg-indigo-500/5 px-4 py-4 text-sm leading-8 text-slate-300">{summary}</p>
+        </Section>
+      ) : null}
+
+      <Section title="Review Extracted Metadata" icon={Target} iconColor="#6C63FF">
+        {!editMode ? (
+          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4 text-sm leading-7 text-slate-300">
+            <p><strong>Call Title:</strong> {resolvedMeta.callTitle || 'Untitled Call'}</p>
+            <p className="capitalize"><strong>Call Type:</strong> {resolvedMeta.callType || 'other'}</p>
+            <p><strong>Product:</strong> {resolvedMeta.productName || 'Unknown'}</p>
+            <p><strong>Customer Name:</strong> {resolvedMeta.customerName || 'Unknown'}</p>
+            <p><strong>Customer Email:</strong> {resolvedMeta.customerEmail || 'Not available'}</p>
+            <p><strong>Customer Phone:</strong> {resolvedMeta.customerPhone || 'Not available'}</p>
+            <div className="mt-3">
+              <button
+                type="button"
+                className="rounded-lg bg-[#6C63FF] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#5d54f4]"
+                onClick={() => {
+                  setMetaForm({
+                    callTitle: resolvedMeta.callTitle,
+                    callType: resolvedMeta.callType,
+                    productName: resolvedMeta.productName,
+                    customerName: resolvedMeta.customerName,
+                    customerEmail: resolvedMeta.customerEmail,
+                    customerPhone: resolvedMeta.customerPhone,
+                  });
+                  setEditMode(true);
+                }}
+              >
+                Edit Metadata
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-r-xl border-l-3 border-cyan-400 bg-cyan-500/5 px-4 py-4">
+            <div className="grid gap-3">
+              <input className={inputClassName} placeholder="Call title" value={metaForm.callTitle} onChange={(event) => setMetaForm((current) => ({ ...current, callTitle: event.target.value }))} />
+              <select className={inputClassName} value={metaForm.callType} onChange={(event) => setMetaForm((current) => ({ ...current, callType: event.target.value }))}>
+                <option value="sales">Sales</option>
+                <option value="service">Service</option>
+                <option value="enquiry">Enquiry</option>
+                <option value="complaint">Complaint</option>
+                <option value="support">Support</option>
+                <option value="renewal">Renewal</option>
+                <option value="upsell">Upsell</option>
+                <option value="other">Other</option>
+              </select>
+              <input className={inputClassName} placeholder="Product name" value={metaForm.productName} onChange={(event) => setMetaForm((current) => ({ ...current, productName: event.target.value }))} />
+              <input className={inputClassName} placeholder="Customer name" value={metaForm.customerName} onChange={(event) => setMetaForm((current) => ({ ...current, customerName: event.target.value }))} />
+              <input className={inputClassName} placeholder="Customer email" value={metaForm.customerEmail} onChange={(event) => setMetaForm((current) => ({ ...current, customerEmail: event.target.value }))} />
+              <input className={inputClassName} placeholder="Customer phone" value={metaForm.customerPhone} onChange={(event) => setMetaForm((current) => ({ ...current, customerPhone: event.target.value }))} />
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button type="button" className="rounded-lg bg-[#6C63FF] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#5d54f4] disabled:opacity-50" onClick={saveMetadata} disabled={savingMeta}>
+                {savingMeta ? 'Saving...' : 'Save Metadata'}
+              </button>
+              <button type="button" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/10" onClick={() => setEditMode(false)} disabled={savingMeta}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </Section>
 
       {call.transcript ? (
         <Section title="Full Transcript" icon={Mic2} defaultOpen={false}>
@@ -975,6 +998,7 @@ function CallDetail({ token }) {
           <pre className="max-h-[400px] overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-5 whitespace-pre-wrap text-sm leading-7 text-slate-300">{call.transcript}</pre>
         </Section>
       ) : null}
+      </div>)}
     </div>
   );
 }
