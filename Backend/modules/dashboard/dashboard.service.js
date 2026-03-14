@@ -40,6 +40,7 @@ export const getAllCalls = async (companyId) => {
     // Map to include only relevant fields for dashboard list
     return calls.map((call) => ({
       callId: call.callId,
+      employeeName: call.employeeName || "Unknown API User",
       product_name: call.product_name,
       status: call.status,
       call_duration: call.call_duration,

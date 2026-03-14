@@ -38,7 +38,8 @@ export const uploadAudio = async (req, res) => {
       call_duration: null,
       customer_name: req.body.customer_name || '',
       customer_email: req.body.customer_email || '',
-      customer_phone: req.body.customer_phone || ''
+      customer_phone: req.body.customer_phone || '',
+      employeeName: req.user?.name || "Unknown"
     };
 
     await CallModel.create(callData);
@@ -86,7 +87,8 @@ export const uploadText = async (req, res) => {
       call_duration: null,
       customer_name: customer_name || '',
       customer_email: customer_email || '',
-      customer_phone: customer_phone || ''
+      customer_phone: customer_phone || '',
+      employeeName: req.user?.name || "Unknown"
     };
 
     await CallModel.create(callData);
