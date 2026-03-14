@@ -91,7 +91,7 @@ function AnalyzeCall({ token }) {
 				const response = await productsApi.getProducts(token);
 				if (response.products?.length > 0) {
 					setProducts(response.products);
-					setProductId(response.products[0]._id);
+					setProductId(''); // Default to auto-detect
 				}
 			} catch (err) {
 				console.error("Could not load products", err);
@@ -401,6 +401,7 @@ function AnalyzeCall({ token }) {
 										onChange={(e) => setProductId(e.target.value)}
 										className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-10 text-sm text-white outline-none transition focus:border-indigo-500/60 focus:bg-white/8 focus:ring-2 focus:ring-indigo-500/15"
 									>
+										<option value="" className="bg-[#121527] text-white">✨ Auto-detect Product using AI</option>
 										{products.map(p => (
 											<option key={p._id} value={p._id} className="bg-[#121527] text-white">
 												{p.productName}

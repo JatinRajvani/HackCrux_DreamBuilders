@@ -335,6 +335,7 @@ function CallDetail({ token }) {
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-400">
               <span className="inline-flex items-center gap-1.5"><Package size={13} /> {productName || 'Product'}</span>
+              <span className="inline-flex items-center gap-1.5"><User size={13} /> {call.employeeName || 'Unknown'}</span>
               <span className="inline-flex items-center gap-1.5"><Calendar size={13} /> {call.createdAt ? new Date(call.createdAt).toLocaleDateString() : '—'}</span>
               <span className="inline-flex items-center gap-1.5"><Mic2 size={13} /> {call.fileName || 'audio file'}</span>
               <span className="inline-flex items-center gap-1.5 capitalize">📌 {call.call_type || callType || 'other'} call</span>

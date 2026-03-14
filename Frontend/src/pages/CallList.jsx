@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Phone, Search, RefreshCw, Calendar,
+  Phone, Search, RefreshCw, Calendar, User,
   Smile, Meh, Frown
 } from "lucide-react";
 import { dashboardApi } from "../api/api";
@@ -193,8 +193,9 @@ const CallList = ({ token }) => {
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#121527eb]">
           <div className="min-w-[980px]">
-            <div className="grid grid-cols-[2fr_1fr_1fr_0.8fr_0.7fr_0.7fr_0.8fr_0.8fr] items-center gap-3 border-b border-white/8 bg-white/3 px-4 py-3 text-[0.68rem] uppercase tracking-[0.08em] text-slate-400">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_0.8fr_0.7fr_0.7fr_0.8fr_0.8fr] items-center gap-3 border-b border-white/8 bg-white/3 px-4 py-3 text-[0.68rem] uppercase tracking-[0.08em] text-slate-400">
               <span>Product / Summary</span>
+              <span>Owner</span>
               <span>Sentiment</span>
               <span>Deal Prob.</span>
               <span>Rep Rating</span>
@@ -222,7 +223,7 @@ const CallList = ({ token }) => {
               return (
                 <div
                   key={call.callId}
-                  className={`grid grid-cols-[2fr_1fr_1fr_0.8fr_0.7fr_0.7fr_0.8fr_0.8fr] items-center gap-3 px-4 py-3 text-sm text-slate-300 transition hover:bg-indigo-500/4 ${index < filtered.length - 1 ? "border-b border-white/6" : ""}`}
+                  className={`grid grid-cols-[2fr_1fr_1fr_1fr_0.8fr_0.7fr_0.7fr_0.8fr_0.8fr] items-center gap-3 px-4 py-3 text-sm text-slate-300 transition hover:bg-indigo-500/4 ${index < filtered.length - 1 ? "border-b border-white/6" : ""}`}
                 >
                   <div>
                     <Link
@@ -237,6 +238,13 @@ const CallList = ({ token }) => {
                     <p className="mt-1 text-[0.72rem] capitalize text-sky-400">
                       Type: {call.callType || "other"}
                     </p>
+                  </div>
+
+                  <div>
+                     <span className="flex items-center gap-1.5 text-xs text-slate-300 font-medium">
+                       <User size={13} className="text-slate-500"/>
+                       {call.employeeName || "Unknown"}
+                     </span>
                   </div>
 
                   <div>
