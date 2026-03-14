@@ -12,7 +12,8 @@ import {
 
 export const getCalls = async (req, res) => {
   try {
-    const calls = await getAllCalls();
+    const companyId = req.user.companyId;
+    const calls = await getAllCalls(companyId);
 
     res.status(200).json({
       success: true,
@@ -31,8 +32,9 @@ export const getCalls = async (req, res) => {
 export const getCallDetailsHandler = async (req, res) => {
   try {
     const { callId } = req.params;
+    const companyId = req.user.companyId;
 
-    const call = await getCallDetails(callId);
+    const call = await getCallDetails(callId, companyId);
 
     if (!call) {
       return res.status(404).json({
@@ -57,7 +59,8 @@ export const getCallDetailsHandler = async (req, res) => {
 
 export const getAnalyticsHandler = async (req, res) => {
   try {
-    const analytics = await getAnalytics();
+    const companyId = req.user.companyId;
+    const analytics = await getAnalytics(companyId);
 
     res.status(200).json({
       success: true,
@@ -83,7 +86,8 @@ export const filterCallsHandler = async (req, res) => {
       });
     }
 
-    const calls = await filterCalls(product_name, sentiment, call_type);
+    const companyId = req.user.companyId;
+    const calls = await filterCalls(companyId, product_name, sentiment, call_type);
 
     res.status(200).json({
       success: true,
@@ -110,7 +114,8 @@ export const getProductAnalysis = async (req, res) => {
       });
     }
 
-    const calls = await getCallsByProduct(product_name);
+    const companyId = req.user.companyId;
+    const calls = await getCallsByProduct(companyId, product_name);
 
     res.status(200).json({
       success: true,
@@ -129,7 +134,8 @@ export const getProductAnalysis = async (req, res) => {
 
 export const getCompetitorInsights = async (req, res) => {
   try {
-    const analysis = await getCompetitorAnalysis();
+    const companyId = req.user.companyId;
+    const analysis = await getCompetitorAnalysis(companyId);
 
     res.status(200).json({
       success: true,
@@ -147,7 +153,8 @@ export const getCompetitorInsights = async (req, res) => {
 export const downloadCallReportHandler = async (req, res) => {
   try {
     const { callId } = req.params;
-    const report = await buildCallReport(callId);
+    const companyId = req.user.companyId;
+    const report = await buildCallReport(callId, companyId);
 
     res.setHeader("Content-Type", report.contentType || "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename=\"${report.fileName}\"`);
