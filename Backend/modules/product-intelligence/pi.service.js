@@ -158,8 +158,8 @@ export const getProductIntelligence = async (companyId, productId) => {
 
   let sentimentPos = 0, sentimentNeg = 0, sentimentNeu = 0;
   let totalProb = 0;
-  let totalRating = 0;
-  let ratedCount = 0;
+  let totalRepRating = 0;
+  let repRatedCount = 0;
   let totalEngagement = 0;
   let engagedCount = 0;
 
@@ -197,12 +197,12 @@ export const getProductIntelligence = async (companyId, productId) => {
     // Probability
     totalProb += ins.dealProbability || 0;
 
-    // Rating
+    // Rating (Rep performance)
     const rating =
       call.salesperson_rating || ins.salespersonPerformance?.rating;
     if (rating) {
-      totalRating += Number(rating);
-      ratedCount++;
+      totalRepRating += Number(rating);
+      repRatedCount++;
     }
 
     // Engagement
@@ -242,6 +242,14 @@ export const getProductIntelligence = async (companyId, productId) => {
   else if (sentimentNeg > sentimentPos && sentimentNeg > sentimentNeu)
     dominantSentiment = "negative";
 
+  // Calculate Overall Product Rating (Out of 10) based on sentiment proportions
+  let overallProductRating = 0;
+  if (totalCalls > 0) {
+    // Math: Positive = 10, Neutral = 6, Negative = 2
+    const totalScoreMap = (sentimentPos * 10) + (sentimentNeu * 6) + (sentimentNeg * 2);
+    overallProductRating = totalScoreMap / totalCalls;
+  }
+
   return {
     product: {
       productId: product._id.toString(),
@@ -254,9 +262,10 @@ export const getProductIntelligence = async (companyId, productId) => {
       avgDealProbability:
         totalCalls > 0 ? Math.round(totalProb / totalCalls) : 0,
       avgRepRating:
-        ratedCount > 0
-          ? Math.round((totalRating / ratedCount) * 10) / 10
+        repRatedCount > 0
+          ? Math.round((totalRepRating / repRatedCount) * 10) / 10
           : 0,
+      overallProductRating: totalCalls > 0 ? Math.round(overallProductRating * 10) / 10 : 0,
       avgCustomerEngagement:
         engagedCount > 0
           ? Math.round((totalEngagement / engagedCount) * 10) / 10
