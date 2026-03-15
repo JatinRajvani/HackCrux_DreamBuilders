@@ -19,6 +19,7 @@ import {
   Zap,
   Phone,
   Star,
+  StarHalf,
 } from "lucide-react";
 
 /* ── Custom tooltip ── */
@@ -171,7 +172,8 @@ const ProductIntelligence = ({ product, token, onBack }) => {
 
   const totalCalls = summary.totalCalls;
   const avgDealProb = summary.avgDealProbability;
-  const avgRating = summary.avgRepRating;
+  const avgRepRating = summary.avgRepRating;
+  const productRating = summary.overallProductRating;
   const avgEngagement = summary.avgCustomerEngagement;
   const sent = summary.sentiment || {};
   const domSentiment = sent.dominant || "neutral";
@@ -228,12 +230,13 @@ const ProductIntelligence = ({ product, token, onBack }) => {
       </div>
 
       {/* ── Summary stat cards ── */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
         <StatCard icon={Phone}       label="Total Calls"      value={totalCalls}            gradient="linear-gradient(135deg,#6C63FF,#8B5CF6)" />
         <StatCard icon={Activity}    label="Avg Deal Prob."    value={`${avgDealProb}%`}     gradient="linear-gradient(135deg,#8B5CF6,#D946EF)" />
         <StatCard icon={DomSentIcon} label="Overall Sentiment" value={domSentiment.charAt(0).toUpperCase() + domSentiment.slice(1)} gradient={domGradient} />
-        <StatCard icon={Star}        label="Avg Rep Rating"    value={`${avgRating}/10`}     gradient="linear-gradient(135deg,#10B981,#84CC16)" />
-        <StatCard icon={Users}       label="Engagement Score"  value={`${avgEngagement}/10`} gradient="linear-gradient(135deg,#06B6D4,#3B82F6)" />
+        <StatCard icon={StarHalf}    label="Product Rating"    value={`${productRating}/10`} gradient="linear-gradient(135deg,#F59E0B,#EF4444)" />
+        <StatCard icon={Star}        label="Avg Rep Rating"    value={`${avgRepRating}/10`}     gradient="linear-gradient(135deg,#10B981,#84CC16)" />
+        <StatCard icon={Users}       label="Engagement"  value={`${avgEngagement}/10`} gradient="linear-gradient(135deg,#06B6D4,#3B82F6)" />
       </div>
 
       {/* ── Sentiment Pie + Call Type Distribution ── */}
