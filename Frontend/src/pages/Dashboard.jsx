@@ -23,6 +23,8 @@ import Insights from "./Insights";
 import TopDeals from "./TopDeals";
 import HighRisk from "./HighRisk";
 import Profile from "./Profile";
+import Employees from "./Employees";
+import Products from "./Products";
 import { dashboardApi } from "../api/api";
 
 const defaultAnalytics = {
@@ -204,6 +206,8 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 	const isInsightsRoute = location.pathname === "/dashboard/insights";
 	const isTopDealsRoute = location.pathname === "/dashboard/top-deals";
 	const isHighRiskRoute = location.pathname === "/dashboard/high-risk";
+	const isEmployeesRoute = location.pathname === "/dashboard/employees";
+	const isProductsRoute = location.pathname === "/dashboard/products";
 	const isProfileRoute = location.pathname === "/dashboard/profile";
 
 	const handleUserUpdate = (updatedUser) => {
@@ -220,6 +224,7 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 				onToggle={() => setSidebarCollapsed((prev) => !prev)}
 				mobileOpen={mobileOpen}
 				onMobileClose={() => setMobileOpen(false)}
+				user={user}
 			/>
 			<Topbar
 				sidebarCollapsed={sidebarCollapsed}
@@ -252,6 +257,10 @@ const Dashboard = ({ user: initialUser, token, onLogout, onUserUpdate }) => {
 					<TopDeals token={token} />
 				) : isHighRiskRoute ? (
 					<HighRisk token={token} />
+				) : isEmployeesRoute ? (
+					<Employees user={user} token={token} />
+				) : isProductsRoute ? (
+					<Products user={user} token={token} />
 				) : isProfileRoute ? (
 					<Profile user={user} token={token} onUserUpdate={handleUserUpdate} onLogout={handleLogout} />
 				) : (

@@ -1,4 +1,5 @@
 import CallModel from "../audio/audio.model.js";
+import ProductModel from "../products/product.model.js";
 import { analyzeConversation } from "./ai.service.js";
 
 export const analyzeCall = async (req, res) => {
@@ -26,10 +27,34 @@ export const analyzeCall = async (req, res) => {
     // Analyze conversation using AI
     const aiInsights = await analyzeConversation(call.transcript);
 
+    // If AI detects a product but the call didn't have one selected natively, attempt to auto-link
+    let targetProductId = call.productId || null;
+    const aiDerivedProductName = aiInsights.productName || "Unknown";
+
+    if (!targetProductId && aiDerivedProductName && aiDerivedProductName !== "Unknown") {
+      try {
+        // Find products for this company
+        const companyProducts = await ProductModel.findByCompanyId(call.companyId);
+        
+        // Find the closest match (ignore casing/trimming)
+        const matchedProduct = companyProducts.find(p => 
+          p.productName?.toLowerCase().trim() === aiDerivedProductName.toLowerCase().trim() ||
+          aiDerivedProductName.toLowerCase().includes(p.productName?.toLowerCase().trim())
+        );
+
+        if (matchedProduct) {
+          targetProductId = matchedProduct._id.toString();
+        }
+      } catch (err) {
+        console.error("Auto product linking failed silently:", err);
+      }
+    }
+
     // Update call record with AI insights and status
     await CallModel.updateOne(callId, {
       aiInsights,
       status: "analyzed",
+      productId: targetProductId,
       product_name: aiInsights.productName || "Unknown",
       call_title: aiInsights.callTitle || "Untitled Call",
       call_type: aiInsights.callType || "other",

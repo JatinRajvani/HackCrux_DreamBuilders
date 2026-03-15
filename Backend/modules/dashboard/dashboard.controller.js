@@ -12,7 +12,9 @@ import {
 
 export const getCalls = async (req, res) => {
   try {
-    const calls = await getAllCalls();
+    const companyId = req.user.companyId;
+    const employeeId = req.user.role === "employee" ? req.user.userId : null;
+    const calls = await getAllCalls(companyId, employeeId);
 
     res.status(200).json({
       success: true,
@@ -31,8 +33,10 @@ export const getCalls = async (req, res) => {
 export const getCallDetailsHandler = async (req, res) => {
   try {
     const { callId } = req.params;
+    const companyId = req.user.companyId;
+    const employeeId = req.user.role === "employee" ? req.user.userId : null;
 
-    const call = await getCallDetails(callId);
+    const call = await getCallDetails(callId, companyId, employeeId);
 
     if (!call) {
       return res.status(404).json({
@@ -57,7 +61,9 @@ export const getCallDetailsHandler = async (req, res) => {
 
 export const getAnalyticsHandler = async (req, res) => {
   try {
-    const analytics = await getAnalytics();
+    const companyId = req.user.companyId;
+    const employeeId = req.user.role === "employee" ? req.user.userId : null;
+    const analytics = await getAnalytics(companyId, employeeId);
 
     res.status(200).json({
       success: true,
@@ -83,7 +89,9 @@ export const filterCallsHandler = async (req, res) => {
       });
     }
 
-    const calls = await filterCalls(product_name, sentiment, call_type);
+    const companyId = req.user.companyId;
+    const employeeId = req.user.role === "employee" ? req.user.userId : null;
+    const calls = await filterCalls(companyId, product_name, sentiment, call_type, employeeId);
 
     res.status(200).json({
       success: true,
@@ -110,7 +118,9 @@ export const getProductAnalysis = async (req, res) => {
       });
     }
 
-    const calls = await getCallsByProduct(product_name);
+    const companyId = req.user.companyId;
+    const employeeId = req.user.role === "employee" ? req.user.userId : null;
+    const calls = await getCallsByProduct(companyId, product_name, employeeId);
 
     res.status(200).json({
       success: true,
@@ -129,7 +139,9 @@ export const getProductAnalysis = async (req, res) => {
 
 export const getCompetitorInsights = async (req, res) => {
   try {
-    const analysis = await getCompetitorAnalysis();
+    const companyId = req.user.companyId;
+    const employeeId = req.user.role === "employee" ? req.user.userId : null;
+    const analysis = await getCompetitorAnalysis(companyId, employeeId);
 
     res.status(200).json({
       success: true,
@@ -147,7 +159,9 @@ export const getCompetitorInsights = async (req, res) => {
 export const downloadCallReportHandler = async (req, res) => {
   try {
     const { callId } = req.params;
-    const report = await buildCallReport(callId);
+    const companyId = req.user.companyId;
+    const employeeId = req.user.role === "employee" ? req.user.userId : null;
+    const report = await buildCallReport(callId, companyId, employeeId);
 
     res.setHeader("Content-Type", report.contentType || "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename=\"${report.fileName}\"`);
@@ -165,7 +179,9 @@ export const downloadCallReportHandler = async (req, res) => {
 
 export const getRiskRadarHandler = async (req, res) => {
   try {
-    const riskCalls = await getRiskRadar();
+    const companyId = req.user.companyId;
+    const employeeId = req.user.role === "employee" ? req.user.userId : null;
+    const riskCalls = await getRiskRadar(companyId, employeeId);
 
     res.status(200).json({
       success: true,

@@ -1,4 +1,4 @@
-import { createElement, useCallback, useRef, useState } from 'react';
+import { createElement, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
 	CheckCircle,
@@ -15,6 +15,7 @@ import {
 	X,
 	Zap,
 } from 'lucide-react';
+import { productsApi } from '../api/api';
 
 const PIPELINE_STEPS = [
 	{ key: 'uploading', label: 'Uploading file', description: 'Saving to server', color: '#6C63FF' },
@@ -77,9 +78,27 @@ function AnalyzeCall({ token }) {
 	const [uploadProgress, setUploadProgress] = useState(0);
 	const [isDragActive, setIsDragActive] = useState(false);
 	const [feedback, setFeedback] = useState(null);
+	// product selection
+	const [products, setProducts] = useState([]);
+	const [productId, setProductId] = useState('');
 	const navigate = useNavigate();
 
 	const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+	useEffect(() => {
+		const loadProducts = async () => {
+			try {
+				const response = await productsApi.getProducts(token);
+				if (response.products?.length > 0) {
+					setProducts(response.products);
+					setProductId(''); // Default to auto-detect
+				}
+			} catch (err) {
+				console.error("Could not load products", err);
+			}
+		};
+		loadProducts();
+	}, [token]);
 
 	const setSelectedFile = useCallback((file) => {
 		if (!file) return;
@@ -119,6 +138,7 @@ function AnalyzeCall({ token }) {
 		formData.append('customer_name', customerName || 'Unknown');
 		formData.append('customer_email', customerEmail);
 		formData.append('customer_phone', customerPhone || '');
+		formData.append('productId', productId || '');
 		const response = await fetch(`${API_BASE_URL}/audio/upload`, {
 			method: 'POST',
 			headers: { 'Authorization': `Bearer ${token}` },
@@ -158,6 +178,7 @@ function AnalyzeCall({ token }) {
 				customer_name: customerName || 'Unknown',
 				customer_email: customerEmail,
 				customer_phone: customerPhone || '',
+				productId: productId || ''
 			}),
 		});
 		const data = await response.json();
@@ -372,6 +393,26 @@ function AnalyzeCall({ token }) {
 									className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-500/60 focus:bg-white/8 focus:ring-2 focus:ring-indigo-500/15"
 								/>
 							))}
+
+							{products.length > 0 && (
+								<div className="relative">
+									<select
+										value={productId}
+										onChange={(e) => setProductId(e.target.value)}
+										className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-10 text-sm text-white outline-none transition focus:border-indigo-500/60 focus:bg-white/8 focus:ring-2 focus:ring-indigo-500/15"
+									>
+										<option value="" className="bg-[#121527] text-white">✨ Auto-detect Product using AI</option>
+										{products.map(p => (
+											<option key={p._id} value={p._id} className="bg-[#121527] text-white">
+												{p.productName}
+											</option>
+										))}
+									</select>
+									<div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+										<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+									</div>
+								</div>
+							)}
 						</div>
 					</section>
 
