@@ -9,6 +9,7 @@ import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
 import userRoutes from "./modules/users/user.routes.js";
 import productRoutes from "./modules/products/product.routes.js";
 import piRoutes from "./modules/product-intelligence/pi.routes.js";
+import eiRoutes from "./modules/employee-intelligence/ei.routes.js";
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/product-intelligence", piRoutes);
+app.use("/api/employee-intelligence", eiRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

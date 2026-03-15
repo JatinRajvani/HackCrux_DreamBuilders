@@ -56,7 +56,7 @@ function App() {
         const response = await fetchCurrentUser(storedAuth.token);
         const nextAuth = {
           ...storedAuth,
-          user: response.user,
+          user: response.data || response.user,
         };
         persistAuth(nextAuth, storedAuth.remember);
         setAuth(nextAuth);

@@ -1,8 +1,4 @@
 import React, { createElement, useEffect, useState } from "react";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell,
-} from "recharts";
 import { dashboardApi } from "../api/api";
 import {
   AlertOctagon,
@@ -65,17 +61,19 @@ const StatCard = ({ icon: StatIcon, label, value, gradient }) => (
   </div>
 );
 
-/* ── Progress row ── */
-const ProgressRow = ({ name, count, maxCount, gradient, badge }) => (
-  <div className="flex items-center gap-3">
-    <span className="w-36 shrink-0 truncate text-[0.82rem] text-slate-300">{name}</span>
-    <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/8">
+/* ── Detailed Insight Row (Prevents Truncation of AI text) ── */
+const InsightRow = ({ text, count, maxCount, gradient, badge }) => (
+  <div className="flex flex-col gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-4 transition hover:bg-white/[0.05] hover:border-white/10">
+    <div className="flex items-start justify-between gap-4">
+      <p className="text-[0.85rem] font-medium leading-relaxed text-slate-200">{text}</p>
+      <Badge tone={badge} className="shrink-0">{count}×</Badge>
+    </div>
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#0a0b14]">
       <div
         className="h-full rounded-full transition-all duration-700"
-        style={{ width: `${(count / maxCount) * 100}%`, background: gradient }}
+        style={{ width: `${maxCount > 0 ? (count / maxCount) * 100 : 0}%`, background: gradient }}
       />
     </div>
-    <Badge tone={badge}>{count}×</Badge>
   </div>
 );
 
@@ -83,12 +81,6 @@ const ProgressRow = ({ name, count, maxCount, gradient, badge }) => (
 const Skeleton = ({ className = "" }) => (
   <div className={`animate-pulse rounded-xl border border-white/6 bg-white/3 ${className}`} />
 );
-
-const truncateLabel = (value, max = 34) => {
-  if (!value) return "Unknown";
-  if (value.length <= max) return value;
-  return `${value.slice(0, max - 1)}…`;
-};
 
 const Insights = ({ token }) => {
   const [competitors, setCompetitors] = useState(null);
@@ -137,14 +129,6 @@ const Insights = ({ token }) => {
   const objectionData   = Object.entries(objectionMap).sort((a, b) => b[1] - a[1]).map(([_id, count]) => ({ _id, count }));
   const signalData      = Object.entries(signalMap).sort((a, b) => b[1] - a[1]).map(([_id, count]) => ({ _id, count }));
   const improvementData = Object.entries(improvementMap).sort((a, b) => b[1] - a[1]).map(([_id, count]) => ({ _id, count }));
-  const objectionChartData = objectionData.slice(0, 8).map((item) => ({
-    ...item,
-    label: truncateLabel(item._id),
-  }));
-  const signalChartData = signalData.slice(0, 8).map((item) => ({
-    ...item,
-    label: truncateLabel(item._id),
-  }));
 
   const comps      = competitors?.competitorsFrequency || [];
   const advantages = competitors?.topAdvantages || [];
@@ -195,7 +179,7 @@ const Insights = ({ token }) => {
 
         {/* Buying Signals */}
         <Card>
-          <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="mb-5 flex items-start flex-wrap gap-4 justify-between border-b border-white/5 pb-4">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
                 <TrendingUp size={17} />
@@ -207,26 +191,18 @@ const Insights = ({ token }) => {
             </div>
             <Badge tone="positive" className="ml-auto">{signalData.length} types</Badge>
           </div>
-          {signalChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={signalChartData.length > 5 ? 320 : 240}>
-              <BarChart data={signalChartData} layout="vertical" margin={{ left: 12, right: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} allowDecimals={false} axisLine={false} tickLine={false} />
-                <YAxis dataKey="label" type="category" tick={{ fontSize: 11, fill: "#94a3b8" }} width={190} axisLine={false} tickLine={false} interval={0} />
-                <Tooltip {...chartTooltipStyle} content={<ChartTooltip />} />
-                <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={22}>
-                  {signalChartData.map((_, i) => (
-                    <Cell key={i} fill={`hsl(${160 - i * 12}, 65%, ${52 - i * 1.5}%)`} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          {signalData.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {signalData.slice(0, 5).map((item, i) => (
+                <InsightRow key={i} text={item._id} count={item.count} maxCount={signalData[0].count} gradient="linear-gradient(90deg,#00D4AA,#06B6D4)" badge="positive" />
+              ))}
+            </div>
           ) : emptyState("No buying signals detected yet.")}
         </Card>
 
         {/* Objections */}
         <Card>
-          <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="mb-5 flex items-start flex-wrap gap-4 justify-between border-b border-white/5 pb-4">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
                 <TrendingDown size={17} />
@@ -238,20 +214,12 @@ const Insights = ({ token }) => {
             </div>
             <Badge tone="negative" className="ml-auto">{objectionData.length} types</Badge>
           </div>
-          {objectionChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={objectionChartData.length > 5 ? 320 : 240}>
-              <BarChart data={objectionChartData} layout="vertical" margin={{ left: 12, right: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} allowDecimals={false} axisLine={false} tickLine={false} />
-                <YAxis dataKey="label" type="category" tick={{ fontSize: 11, fill: "#94a3b8" }} width={190} axisLine={false} tickLine={false} interval={0} />
-                <Tooltip {...chartTooltipStyle} content={<ChartTooltip />} />
-                <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={22}>
-                  {objectionChartData.map((_, i) => (
-                    <Cell key={i} fill={`hsl(${5 + i * 8}, 70%, ${55 - i * 2}%)`} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          {objectionData.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {objectionData.slice(0, 5).map((item, i) => (
+                <InsightRow key={i} text={item._id} count={item.count} maxCount={objectionData[0].count} gradient="linear-gradient(90deg,#FB923C,#EF4444)" badge="negative" />
+              ))}
+            </div>
           ) : emptyState("No objections detected yet.")}
         </Card>
       </div>
@@ -259,23 +227,26 @@ const Insights = ({ token }) => {
       {/* ── Improvements ── */}
       {improvementData.length > 0 && (
         <Card className="mb-5">
-          <div className="mb-5 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400">
-              <Package size={17} />
+          <div className="mb-5 flex items-start flex-wrap gap-4 justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400">
+                <Package size={17} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Product Improvements Needed</h3>
+                <p className="text-xs text-slate-500">Most-requested gaps from customer feedback</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">Product Improvements Needed</h3>
-              <p className="text-xs text-slate-500">Most-requested gaps from customer feedback</p>
-            </div>
+            <Badge tone="neutral">{improvementData.length} requests</Badge>
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {improvementData.map((item, i) => (
-              <ProgressRow
+              <InsightRow
                 key={i}
-                name={item._id}
+                text={item._id}
                 count={item.count}
                 maxCount={improvementData[0].count}
-                gradient="linear-gradient(90deg,#6C63FF,#00D4AA)"
+                gradient="linear-gradient(90deg,#8B5CF6,#D946EF)"
                 badge="neutral"
               />
             ))}
@@ -288,21 +259,24 @@ const Insights = ({ token }) => {
 
         {/* Competitor mentions */}
         <Card>
-          <div className="mb-5 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
-              <AlertOctagon size={17} />
+          <div className="mb-5 flex items-start flex-wrap gap-4 justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+                <AlertOctagon size={17} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Competitor Mentions</h3>
+                <p className="text-xs text-slate-500">How often alternatives were discussed</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">Competitor Mentions</h3>
-              <p className="text-xs text-slate-500">How often alternatives were discussed</p>
-            </div>
+            {comps.length > 0 && <Badge tone="neutral">{comps.length} competitors</Badge>}
           </div>
           {comps.length > 0 ? (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {comps.map((c, i) => (
-                <ProgressRow
+                <InsightRow
                   key={i}
-                  name={c.name}
+                  text={c.name}
                   count={c.count}
                   maxCount={comps[0].count}
                   gradient="linear-gradient(90deg,#FFB347,#FF8C42)"
@@ -315,21 +289,24 @@ const Insights = ({ token }) => {
 
         {/* Why customers prefer competitors */}
         <Card>
-          <div className="mb-5 flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
-              <Users size={17} />
+          <div className="mb-5 flex items-start flex-wrap gap-4 justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
+                <Users size={17} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Why Customers Prefer Competitors</h3>
+                <p className="text-xs text-slate-500">Top perceived advantages of competitors</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">Why Customers Prefer Competitors</h3>
-              <p className="text-xs text-slate-500">Top perceived advantages of competitors</p>
-            </div>
+            {advantages.length > 0 && <Badge tone="negative">{advantages.length} reasons</Badge>}
           </div>
           {advantages.length > 0 ? (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {advantages.map((a, i) => (
-                <ProgressRow
+                <InsightRow
                   key={i}
-                  name={a.advantage}
+                  text={a.advantage}
                   count={a.count}
                   maxCount={advantages[0].count}
                   gradient="linear-gradient(90deg,#FB7185,#EF4444)"
