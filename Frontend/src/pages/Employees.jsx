@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Users, Plus, Mail, Shield, X, Briefcase, Key, User } from "lucide-react";
+import { Users, Plus, Mail, Shield, X, Briefcase, Key, User, ArrowRight } from "lucide-react";
 import { usersApi } from "../api/api";
+import EmployeeIntelligence from "./EmployeeIntelligence";
 
 const Employees = ({ user, token }) => {
   const [employees, setEmployees] = useState([]);
@@ -8,6 +9,7 @@ const Employees = ({ user, token }) => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -69,6 +71,11 @@ const Employees = ({ user, token }) => {
     );
   }
 
+  // If an employee is clicked, show specific intelligence view
+  if (selectedEmployee) {
+    return <EmployeeIntelligence employee={selectedEmployee} token={token} onBack={() => setSelectedEmployee(null)} />;
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header Area */}
@@ -125,8 +132,12 @@ const Employees = ({ user, token }) => {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {employees.map((emp) => (
-                  <tr key={emp._id} className="transition hover:bg-white/[0.02]">
-                    <td className="whitespace-nowrap px-6 py-4 font-medium text-white">
+                  <tr 
+                    key={emp._id} 
+                    onClick={() => setSelectedEmployee(emp)}
+                    className="group cursor-pointer transition hover:bg-indigo-500/10"
+                  >
+                    <td className="whitespace-nowrap px-6 py-4 font-medium text-white transition group-hover:text-indigo-400">
                       {emp.name}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
@@ -143,6 +154,9 @@ const Employees = ({ user, token }) => {
                       }`}>
                         {emp.role || "employee"}
                       </span>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right">
+                       <ArrowRight size={16} className="text-slate-500 transition group-hover:translate-x-1 group-hover:text-indigo-400 opacity-50 group-hover:opacity-100" />
                     </td>
                   </tr>
                 ))}

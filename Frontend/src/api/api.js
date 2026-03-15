@@ -188,3 +188,23 @@ export const productIntelligenceApi = {
     }
   },
 };
+
+export const employeeIntelligenceApi = {
+  getOverview: async (token) => {
+    try {
+      const data = await tryFetchJson("/employee-intelligence/overview", token);
+      return { employees: data.employees || [] };
+    } catch {
+      return { employees: [] };
+    }
+  },
+
+  getEmployeeIntelligence: async (employeeId, token) => {
+    try {
+      const data = await tryFetchJson(`/employee-intelligence/${employeeId}`, token);
+      return data;
+    } catch {
+      return null;
+    }
+  },
+};
